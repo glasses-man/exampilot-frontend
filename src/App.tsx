@@ -687,20 +687,16 @@ FINAL ANSWER: [answer]
 Make it encouraging and clear.${language === 'ar' ? ' Write the entire response in Arabic.' : ''}`
 
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch('https://exampilot-api-production-a120.up.railway.app/explain', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer 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'
         },
         body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            { role: 'system', content: `You are an expert IGCSE teacher who explains concepts clearly and encouragingly.${language === 'ar' ? ' Respond in Arabic.' : ''}` },
-            { role: 'user', content: prompt }
-          ],
-          temperature: 0.7,
-          max_tokens: 1500
+          question: prompt,
+          subject: subject,
+          language: language === 'ar' ? 'arabic' : 'english',
+          user_id: 'user'
         })
       })
 
@@ -709,7 +705,7 @@ Make it encouraging and clear.${language === 'ar' ? ' Write the entire response 
       }
 
       const data = await response.json()
-      return data.choices[0].message.content
+      return data.explanation || data.answer || data.content || data.text
     } catch (error) {
       console.error('OpenAI error:', error)
       // Fallback response
