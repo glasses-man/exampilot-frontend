@@ -187,16 +187,7 @@ function App() {
     }
   }, [])
 
-  useEffect(() => {
-    if (currentView === 'auth') {
-            theme: 'outline',
-            size: 'large',
-            width: '100%',
-          })
-        }
-      })
-    }
-  }, [currentView])
+
 
 
   const handleLogin = async (e: React.FormEvent) => {
