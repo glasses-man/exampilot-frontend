@@ -19,11 +19,6 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 
-// EmailJS for verification
-const EMAILJS_SERVICE_ID = 'service_exampilot'
-const EMAILJS_TEMPLATE_ID = 'template_verify'
-const EMAILJS_PUBLIC_KEY = 'YOUR_EMAILJS_PUBLIC_KEY'
-
 // Types
 interface User {
   id: string
@@ -273,67 +268,21 @@ function App() {
     if (passwordVal.length < 6) { toast.error('Password must be at least 6 characters.'); return }
     const allUsers = JSON.parse(localStorage.getItem('exampilot_users') || '{}')
     if (allUsers[emailVal]) { toast.error('Email already registered. Please log in.'); return }
-
-    // Generate 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString()
-    setPendingSignup({ email: emailVal, password: passwordVal, name: nameVal, code })
-    setSendingEmail(true)
-
-    try {
-      // Load EmailJS dynamically
-      if (!(window as any).emailjs) {
-        await new Promise<void>((resolve) => {
-          const script = document.createElement('script')
-          script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js'
-          script.onload = () => resolve()
-          document.head.appendChild(script)
-        })
-      }
-      const ejs = (window as any).emailjs
-      ejs.init(EMAILJS_PUBLIC_KEY)
-      await ejs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-        to_email: emailVal,
-        to_name: nameVal,
-        verification_code: code,
-        app_name: 'ExamPilot'
-      })
-      setShowVerification(true)
-      toast.success('Verification code sent to your email! 📧')
-    } catch (err) {
-      console.error(err)
-      // Fallback: show code in toast for testing
-      toast.info(\`Your code: \${code} (EmailJS not configured yet)\`)
-      setShowVerification(true)
-    } finally {
-      setSendingEmail(false)
-    }
-  }
-
-  const handleVerifyCode = () => {
-    if (!pendingSignup) return
-    if (verificationCode !== pendingSignup.code) {
-      toast.error('Wrong code. Check your email and try again.')
-      return
-    }
-    const allUsers = JSON.parse(localStorage.getItem('exampilot_users') || '{}')
     const newUser: User = {
-      id: 'user-' + Date.now(), email: pendingSignup.email, name: pendingSignup.name, tier: 'free',
+      id: 'user-' + Date.now(), email: emailVal, name: nameVal, tier: 'free',
       daily_questions: 0, total_questions: 0, streak: 0,
       last_active: new Date().toISOString(), xp: 0, level: 1, badges: [],
       preferred_language: 'en'
     }
-    allUsers[pendingSignup.email] = { ...newUser, password: pendingSignup.password }
+    allUsers[emailVal] = { ...newUser, password: passwordVal }
     localStorage.setItem('exampilot_users', JSON.stringify(allUsers))
     const token = 'token-' + Date.now()
     setUser(newUser)
     setToken(token)
     localStorage.setItem('exampilot_token', token)
     localStorage.setItem('exampilot_user', JSON.stringify(newUser))
-    setShowVerification(false)
-    setPendingSignup(null)
-    setVerificationCode('')
     setCurrentView('dashboard')
-    toast.success('Email verified! Welcome to ExamPilot 🎉')
+    toast.success('Account created! Welcome to ExamPilot!')
   }
 
   const handleLogout = () => {
@@ -389,40 +338,6 @@ function App() {
           t={t}
         />
       )}
-      {/* Email Verification Dialog */}
-      <Dialog open={showVerification} onOpenChange={setShowVerification}>
-        <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-center text-xl">📧 Verify Your Email</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <p className="text-gray-400 text-center text-sm">
-              We sent a 6-digit code to <span className="text-purple-400 font-medium">{pendingSignup?.email}</span>
-            </p>
-            <Input
-              type="text"
-              placeholder="Enter 6-digit code"
-              value={verificationCode}
-              onChange={e => setVerificationCode(e.target.value)}
-              maxLength={6}
-              className="text-center text-2xl tracking-widest bg-gray-800 border-gray-600 text-white"
-            />
-            <Button
-              onClick={handleVerifyCode}
-              className="w-full bg-purple-600 hover:bg-purple-700"
-              disabled={verificationCode.length !== 6}
-            >
-              Verify & Create Account
-            </Button>
-            <button
-              onClick={() => { setShowVerification(false); setPendingSignup(null) }}
-              className="w-full text-gray-500 text-sm hover:text-gray-300"
-            >
-              Cancel
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   )
 }
