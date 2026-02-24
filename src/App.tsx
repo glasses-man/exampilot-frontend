@@ -163,21 +163,6 @@ const mockLeaderboard: LeaderboardEntry[] = [
   { rank: 5, name: 'Lina R.', xp: 320, level: 2, streak: 2 },
 ]
 
-// Google Auth Helper
-const initGoogleAuth = () => {
-  return new Promise<void>((resolve) => {
-    if ((window as any).google) {
-      resolve()
-      return
-    }
-    const script = document.createElement('script')
-    script.src = 'https://accounts.google.com/gsi/client'
-    script.async = true
-    script.defer = true
-    script.onload = () => resolve()
-    document.head.appendChild(script)
-  })
-}
 
 // Main App Component
 function App() {
@@ -186,7 +171,6 @@ function App() {
   const [currentView, setCurrentView] = useState<'landing' | 'auth' | 'dashboard'>('landing')
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
   const [language, setLanguage] = useState<'en' | 'ar'>('en')
-  const googleBtnRef = useRef<HTMLDivElement>(null)
 
   const t = TRANSLATIONS[language]
 
@@ -203,16 +187,8 @@ function App() {
     }
   }, [])
 
-  // Initialize Google Auth
   useEffect(() => {
     if (currentView === 'auth') {
-      initGoogleAuth().then(() => {
-        if ((window as any).google && googleBtnRef.current) {
-          (window as any).google.accounts.id.initialize({
-            client_id: 'YOUR_GOOGLE_CLIENT_ID', // Replace with your Google Client ID
-            callback: handleGoogleCallback,
-          })
-          ;(window as any).google.accounts.id.renderButton(googleBtnRef.current, {
             theme: 'outline',
             size: 'large',
             width: '100%',
@@ -222,23 +198,6 @@ function App() {
     }
   }, [currentView])
 
-  const handleGoogleCallback = (response: any) => {
-    // Decode JWT to get user info
-    const payload = JSON.parse(atob(response.credential.split('.')[1]))
-    const newUser = {
-      ...mockUser,
-      email: payload.email,
-      name: payload.name,
-      id: payload.sub,
-    }
-    const mockToken = 'google-token-' + Date.now()
-    setUser(newUser)
-    setToken(mockToken)
-    localStorage.setItem('exampilot_token', mockToken)
-    localStorage.setItem('exampilot_user', JSON.stringify(newUser))
-    setCurrentView('dashboard')
-    toast.success(`Welcome, ${payload.name}!`)
-  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -322,7 +281,6 @@ function App() {
           setCurrentView={setCurrentView}
           handleLogin={handleLogin}
           handleSignup={handleSignup}
-          googleBtnRef={googleBtnRef as React.RefObject<HTMLDivElement>}
           language={language}
           toggleLanguage={toggleLanguage}
           t={t}
@@ -567,7 +525,6 @@ function AuthPage({
   setCurrentView,
   handleLogin,
   handleSignup,
-  googleBtnRef,
   language,
   toggleLanguage,
   t
@@ -577,7 +534,6 @@ function AuthPage({
   setCurrentView: (v: 'landing' | 'auth' | 'dashboard') => void
   handleLogin: (e: React.FormEvent) => void
   handleSignup: (e: React.FormEvent, name: string) => void
-  googleBtnRef: React.RefObject<HTMLDivElement | null>
   language: 'en' | 'ar'
   toggleLanguage: () => void
   t: typeof TRANSLATIONS.en
