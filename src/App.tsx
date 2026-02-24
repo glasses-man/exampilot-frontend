@@ -140,20 +140,6 @@ const TRANSLATIONS = {
 }
 
 // Mock data
-const mockUser: User = {
-  id: 'demo-user',
-  email: 'student@demo.com',
-  name: 'Demo Student',
-  tier: 'free',
-  daily_questions: 2,
-  total_questions: 15,
-  streak: 3,
-  last_active: new Date().toISOString(),
-  xp: 450,
-  level: 3,
-  badges: ['first_question', 'streak_3', 'questions_10'],
-  preferred_language: 'en'
-}
 
 const mockLeaderboard: LeaderboardEntry[] = [
   { rank: 1, name: 'Ahmed K.', xp: 2500, level: 8, streak: 12 },
